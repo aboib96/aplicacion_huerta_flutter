@@ -26,15 +26,52 @@ class _HomeState extends State<Home> {
               return ListView.builder(
                 itemCount: snapshot.data?.length,
                 itemBuilder: (BuildContext context, int index) {
-                  return ListTile(
-                    title: Text(snapshot.data?[index]['name']),
-                    onTap: (() async {
-                      await Navigator.pushNamed(context, "/edit", arguments: {
-                        "name": snapshot.data?[index]['name'],
-                        "uid": snapshot.data?[index]['uid'],
-                      });
-                      setState(() {});
-                    }),
+                  return Dismissible(
+                    onDismissed: (direction) async {
+                      await deletePeople(snapshot.data?[index]['uid']);
+                      snapshot.data?.removeAt(index);
+                    },
+                    confirmDismiss: (direction) async {
+                      bool result = false;
+                      result = await showDialog(
+                          context: context,
+                          builder: (context) {
+                            return AlertDialog(
+                              title: Text(
+                                  "Eliminar a ${snapshot.data?[index]['name']}"),
+                              actions: [
+                                TextButton(
+                                    onPressed: () {
+                                      return Navigator.pop(context, false);
+                                    },
+                                    child: const Text("Cancelar",
+                                        style: TextStyle(color: Colors.red))),
+                                TextButton(
+                                    onPressed: () {
+                                      return Navigator.pop(context, true);
+                                    },
+                                    child: const Text("Aceptar"))
+                              ],
+                            );
+                          });
+                      return result;
+                    },
+                    background: Container(
+                      color: Colors.red,
+                      child: const Icon(Icons.delete),
+                    ),
+                    direction: DismissDirection.startToEnd,
+                    key: Key(snapshot.data?[index]['uid']),
+                    child: ListTile(
+                      title: Text(snapshot.data?[index]['name']),
+                      onTap: (() async {
+                        await Navigator.pushNamed(context, "/edit", arguments: {
+                          "name": snapshot.data?[index]['name'],
+                          "uid": snapshot.data?[index]['uid'],
+                        });
+                        setState(() {});
+                      }),
+                    ),
                   );
                 },
               );
